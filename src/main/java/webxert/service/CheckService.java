@@ -4,13 +4,10 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.routing.*;
+import akka.routing.RoundRobinPool;
+import com.sun.tools.javac.util.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import webxert.actor.ProfileDataMissingActor;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -23,12 +20,10 @@ public class CheckService {
     ActorSystem actorSystem;
 
     public void initCheck(Class<? extends UntypedActor> actor, Integer routerPoolSize, Integer messageCount) {
-        if (messageCount!=null && messageCount>1) {
-            ActorRef router = actorSystem.actorOf(new RoundRobinPool(routerPoolSize).props(Props.create(actor)), actor.getName() + "Router");
-            for (int i = 0; i < messageCount; i++) {
-                router.tell(i, ActorRef.noSender());
-                //actorSystem.actorOf(Props.create(actor)).tell(i, ActorRef.noSender());
-            }
+        Assert.check(messageCount!=null && messageCount>1);
+        ActorRef router = actorSystem.actorOf(new RoundRobinPool(routerPoolSize).props(Props.create(actor)), actor.getName() + "Router");
+        for (int i = 0; i < messageCount; i++) {
+            router.tell(i, ActorRef.noSender());
         }
     }
 }
